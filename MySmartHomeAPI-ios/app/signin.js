@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { router } from 'expo-router';
+import { router, useNavigation } from 'expo-router';
 import { View, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, TextInput, Pressable, Text, useColorScheme, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { login } from '../api/django-auth';
@@ -16,10 +16,12 @@ export default function Page() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const navigation = useNavigation();
 
     const handleLogin = async () => {
         try {
             await login(username, password);
+            router.back();
             router.replace('/dashboard');
         } catch (error) {
             setError('Failed to log in. Please check your credentials and try again.');

@@ -1,7 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
 import { Text, StyleSheet, View, useColorScheme, FlatList } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Dial } from '../components/RadialControl';
+import { GET, PUT } from '../api/api-request';
 
 export default function Page() {
     const colorScheme = useColorScheme();
@@ -11,26 +14,87 @@ export default function Page() {
     const headerTextStyle = colorScheme === 'light' ? styles.lightHeadertext : styles.darkHeadertext;
     const itemStyle = colorScheme === 'light' ? styles.lightItem : styles.darkItem;
     const itemText = colorScheme === 'light' ? styles.lightItemText : styles.darkItemText;
+    const buttonStyle = colorScheme === 'light' ? styles.lightButton : styles.darkButton;
+
+    const [kitchenLabel, setKitchenLabel] = useState('Fetching Value...');
+    const [kitchenValue, setKitchenValue] = useState(1);
+
+    async function updateKitchenLightBehaviourSwitch(endpoint) {
+        var value = -1;
+        try {
+            value = await GET(endpoint);
+            value = value.val;
+        } catch (error) {
+            console.error(error);
+            value = -1;
+        }
+        setKitchenValue(value);
+        ResolveKitchenLightBehaviourSwitchLabels(value);
+        // setTimeout(updateKitchenLightBehaviourSwitch, 20000);
+    }
+
+    updateKitchenLightBehaviourSwitch('kitchen/lights/keep_on/');
 
     //TODO: add labels for each value of the behaviour switch to the api endpoint
-    function KitchenLightBehaviourSwitchLabels(value) {
+    function ResolveKitchenLightBehaviourSwitchLabels(value) {
+        var newLabel = "Fetching Value...";
         switch (value) {
+            case -1:
+                newLabel = 'Error Fetching Value';
+                break;
             case 0:
-                return 'Normal';
+                newLabel = 'Normal';
+                break;
             case 1:
-                return 'Keep Off';
+                newLabel = 'Keep Off';
+                break;
             case 2:
-                return 'Keep On';
+                newLabel = 'Keep On';
+                break;
             case 3:
-                return 'Follow me';
+                newLabel = 'Follow Me';
+                break;
+        }
+        setKitchenLabel(newLabel);
+    }
+
+    async function setKitchenLightBehaviourSwitch(endpoint, value) {
+        try {
+            data = await PUT(endpoint, {val: value});
+            val = data.val;
+            setKitchenValue(val);
+            ResolveKitchenLightBehaviourSwitchLabels(val);
+        } catch (error) {
+            console.error(error);
         }
     }
 
+
     //TODO: add api endpoint to return all behaviour swithces and other endpoints and dynamically create layout
-    const KitchenLightBehaviourSwitch = ({title}) => (
+    const BehaviourSwitch = ({title, endpoint}) => (
         <View style={[styles.item, itemStyle]}>
             <Text style={[styles.itemText, itemText]}>{title}</Text>
-            
+            <View style={[styles.button, buttonStyle]}>
+                <Text style={[styles.buttontext, itemText]}>
+                    {kitchenLabel}
+                </Text>
+            </View>
+            <GestureHandlerRootView>
+                <Dial
+                    onValueChange={async (value) => {
+                        // ResolveKitchenLightBehaviourSwitchLabels(value-1);
+                        // await setKitchenLightBehaviourSwitch(endpoint, value-1);
+                    }}
+                    onFingerUp={async (value) => {
+                        // ResolveKitchenLightBehaviourSwitchLabels(value-1);
+                        await setKitchenLightBehaviourSwitch(endpoint, value-1);
+                    }}
+                    start_notch={kitchenValue+1}
+                    highlightAllPrevious={false}
+                    num_notches={3}
+                    scale={0.5}
+                />
+            </GestureHandlerRootView>
         </View>
     );
 
@@ -42,7 +106,7 @@ export default function Page() {
                     <Text style={[styles.headertext, headerTextStyle]}>My Home Dashboard</Text>
                 </View>
                 <View style={[styles.container, containerStyle]}>
-                    <KitchenLightBehaviourSwitch title="Kitchen Light Behaviour" />
+                    <BehaviourSwitch title="Kitchen Light Behaviour" endpoint="kitchen/lights/keep_on/" />
                 </View>
             </SafeAreaProvider>
         </View>
@@ -116,9 +180,13 @@ const styles = StyleSheet.create({
         color: 'white',
     },
     item: {
-        padding: 20,
+        paddingTop: 10,
+        paddingBottom: 0,
+        paddingHorizontal: 50,
         marginVertical: 8,
         marginHorizontal: 16,
+        elevation: 1,
+        height: 300,
     },
     lightItem: {
         backgroundColor: '#d0d0c0',

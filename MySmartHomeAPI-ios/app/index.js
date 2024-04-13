@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { Text, StyleSheet, Pressable, View, useColorScheme } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 
 export default function Page() {
