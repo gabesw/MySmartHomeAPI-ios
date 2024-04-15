@@ -1,4 +1,4 @@
-import React, { useEffect, useState, memo, useRef, useCallback } from "react";
+import React, { useEffect, useState, memo, useMemo, useRef, useCallback } from "react";
 import {
   Image,
   StatusBar,
@@ -31,6 +31,35 @@ function toDeg(radians: number) {
   return (radians * 180) / Math.PI;
 }
 
+const useDebouncedCallback = (callback: (value: number) => void, delay: number) => {
+  // Use useRef to hold the timer ID, which does not trigger re-renders
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>();
+
+  // Cleanup function to clear the timer
+  useEffect(() => {
+      return () => {
+          if (timerRef.current) {
+              clearTimeout(timerRef.current);
+          }
+      };
+  }, []); // Ensure this runs only once when the component unmounts
+
+  // The debounced function
+  const debouncedCallback = useCallback((value: number) => {
+      // Clear the existing timer every time the function is called
+      if (timerRef.current) {
+          clearTimeout(timerRef.current);
+      }
+
+      // Set a new timer
+      timerRef.current = setTimeout(() => {
+          callback(value);
+      }, delay);
+  }, [callback, delay]); // Dependencies include the callback and delay
+
+  return debouncedCallback;
+};
+
 type NotchProps = {
   onValueChange?: (value: number) => void;
   onFingerUp?: (value: number) => void;
@@ -40,35 +69,7 @@ type NotchProps = {
   start_notch?: number;
 };
 
-export const Dial = memo(({onValueChange, onFingerUp, highlightAllPrevious = true, num_notches = 8, scale = 1.0, start_notch = 1} : NotchProps) => {
-  const useDebouncedCallback = (callback: (value: number) => void, delay: number) => {
-    // Use useRef to hold the timer ID, which does not trigger re-renders
-    const timerRef = useRef<ReturnType<typeof setTimeout> | null>();
-  
-    // Cleanup function to clear the timer
-    useEffect(() => {
-        return () => {
-            if (timerRef.current) {
-                clearTimeout(timerRef.current);
-            }
-        };
-    }, []); // Ensure this runs only once when the component unmounts
-  
-    // The debounced function
-    const debouncedCallback = useCallback((value: number) => {
-        // Clear the existing timer every time the function is called
-        if (timerRef.current) {
-            clearTimeout(timerRef.current);
-        }
-  
-        // Set a new timer
-        timerRef.current = setTimeout(() => {
-            callback(value);
-        }, delay);
-    }, [callback, delay]); // Dependencies include the callback and delay
-  
-    return debouncedCallback;
-  };
+export const Dial = ({onValueChange, onFingerUp, highlightAllPrevious = true, num_notches = 8, scale = 1.0, start_notch = 1} : NotchProps) => {
   
   const handleDialChange = useDebouncedCallback((value) => {
     if(onValueChange)
@@ -358,4 +359,4 @@ export const Dial = memo(({onValueChange, onFingerUp, highlightAllPrevious = tru
       </GestureDetector>
     </SafeAreaView>
   );
-});
+};

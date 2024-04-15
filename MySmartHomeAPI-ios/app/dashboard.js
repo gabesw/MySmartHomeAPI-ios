@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { Text, StyleSheet, View, useColorScheme, FlatList } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Dial } from '../components/RadialControl';
 import { GET, PUT } from '../api/api-request';
@@ -33,7 +33,10 @@ export default function Page() {
         // setTimeout(updateKitchenLightBehaviourSwitch, 20000);
     }
 
-    updateKitchenLightBehaviourSwitch('kitchen/lights/keep_on/');
+    useEffect(() => {
+        //Run once on page load
+        updateKitchenLightBehaviourSwitch('kitchen/lights/keep_on/');
+    }, [""]);
 
     //TODO: add labels for each value of the behaviour switch to the api endpoint
     function ResolveKitchenLightBehaviourSwitchLabels(value) {
@@ -69,20 +72,12 @@ export default function Page() {
         }
     }
 
-
     //TODO: add api endpoint to return all behaviour swithces and other endpoints and dynamically create layout
-    const BehaviourSwitch = ({title, endpoint}) => (
-        <View style={[styles.item, itemStyle]}>
-            <Text style={[styles.itemText, itemText]}>{title}</Text>
-            <View style={[styles.button, buttonStyle]}>
-                <Text style={[styles.buttontext, itemText]}>
-                    {kitchenLabel}
-                </Text>
-            </View>
+    const BehaviourSwitch = useMemo(() => ({title, endpoint}) => (
             <GestureHandlerRootView>
                 <Dial
                     onValueChange={async (value) => {
-                        // ResolveKitchenLightBehaviourSwitchLabels(value-1);
+                        ResolveKitchenLightBehaviourSwitchLabels(value-1);
                         // await setKitchenLightBehaviourSwitch(endpoint, value-1);
                     }}
                     onFingerUp={async (value) => {
@@ -95,8 +90,7 @@ export default function Page() {
                     scale={0.5}
                 />
             </GestureHandlerRootView>
-        </View>
-    );
+    ), []);
 
     return (
         <View style={styles.page}>
@@ -106,7 +100,15 @@ export default function Page() {
                     <Text style={[styles.headertext, headerTextStyle]}>My Home Dashboard</Text>
                 </View>
                 <View style={[styles.container, containerStyle]}>
-                    <BehaviourSwitch title="Kitchen Light Behaviour" endpoint="kitchen/lights/keep_on/" />
+                    <View style={[styles.item, itemStyle]}>
+                        <Text style={[styles.itemText, itemText]}>Kitchen Light Behaviour</Text>
+                        <View style={[styles.button, buttonStyle]}>
+                            <Text style={[styles.buttontext, itemText]}>
+                                {kitchenLabel}
+                            </Text>
+                        </View>
+                        <BehaviourSwitch title="Kitchen Light Behaviour" endpoint="kitchen/lights/keep_on/" />
+                    </View>
                 </View>
             </SafeAreaProvider>
         </View>
