@@ -17,7 +17,7 @@ export default function Page() {
     const buttonStyle = colorScheme === 'light' ? styles.lightButton : styles.darkButton;
 
     const [kitchenLabel, setKitchenLabel] = useState('Fetching Value...');
-    const [kitchenValue, setKitchenValue] = useState(1);
+    const [kitchenValue, setKitchenValue] = useState(-1);
 
     async function updateKitchenLightBehaviourSwitch(endpoint) {
         var value = -1;
@@ -38,27 +38,18 @@ export default function Page() {
         updateKitchenLightBehaviourSwitch('kitchen/lights/keep_on/');
     }, [""]);
 
+    // Also make this dynamic
+    var kitchenLightBehaviourSwitchLabels = {
+        0: 'Normal',
+        1: 'Keep Off',
+        2: 'Keep On',
+        3: 'Follow Me',
+    };
+
     //TODO: add labels for each value of the behaviour switch to the api endpoint
     function ResolveKitchenLightBehaviourSwitchLabels(value) {
-        var newLabel = "Fetching Value...";
-        switch (value) {
-            case -1:
-                newLabel = 'Error Fetching Value';
-                break;
-            case 0:
-                newLabel = 'Normal';
-                break;
-            case 1:
-                newLabel = 'Keep Off';
-                break;
-            case 2:
-                newLabel = 'Keep On';
-                break;
-            case 3:
-                newLabel = 'Follow Me';
-                break;
-        }
-        setKitchenLabel(newLabel);
+        const label = kitchenLightBehaviourSwitchLabels[value];
+        setKitchenLabel(label == undefined ? 'Invalid Value' : label);
     }
 
     async function setKitchenLightBehaviourSwitch(endpoint, value) {
